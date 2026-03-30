@@ -1,74 +1,84 @@
-# layout.py — Parse and serialize the SpringBoard iconState plist format
+# layout.py — Parse and serialize the SpringBoard iconState format (iOS 26)
 #
-# The raw plist from the device looks like:
-#   {
-#     "buttonBar": ["com.apple.mobilephone", ...],   # dock
-#     "iconLists": [                                  # pages
-#       ["com.apple.mobilesafari", {...folder...}, ...],
-#       [...],
-#     ]
-#   }
+# get_icon_state(format_version="") returns a flat list:
+#   [dock_section, page1, page2, ...]
 #
-# This module converts it to/from a friendlier JSON shape for the frontend:
+#   dock_section = [[app_dict, ...]]        # one row of dock apps
+#   pageN        = [row, row, ...]          # each row = [item, item, item, item]
+#
+# Each item is either an app dict:
+#   {"displayIdentifier": "...", "bundleIdentifier": "...", "displayName": "...", ...}
+# or False for an empty slot.
+#
+# Frontend JSON shape:
 #   {
-#     "dock": ["com.apple.mobilephone", ...],
+#     "dock": [{"type": "app", "id": "...", "name": "..."}, ...],
 #     "pages": [
-#       [
-#         {"type": "app",    "id": "com.apple.mobilesafari"},
-#         {"type": "folder", "name": "Utilities", "pages": [["com.apple.Preferences", ...]]},
-#       ],
+#       [{"type": "app", "id": "...", "name": "..."}, {"type": "empty"}, ...],
 #       ...
 #     ]
 #   }
 
-
-def _parse_item(item):
-    if isinstance(item, str):
-        return {"type": "app", "id": item}
-    if isinstance(item, dict):
-        # Folder
-        inner_pages = []
-        for page in item.get("iconLists", []):
-            inner_pages.append([i for i in page if isinstance(i, str)])
-        return {
-            "type": "folder",
-            "name": item.get("displayName", ""),
-            "pages": inner_pages,
-        }
-    return None
+ROW_WIDTH = 4
 
 
-def plist_to_json(raw: dict) -> dict:
-    """Convert raw SpringBoard plist dict to frontend-friendly JSON."""
-    dock = list(raw.get("buttonBar", []))
+def _parse_app(item):
+    if not item or not isinstance(item, dict):
+        return None
+    bid = item.get("bundleIdentifier") or item.get("displayIdentifier", "")
+    name = item.get("displayName", bid)
+    return {"type": "app", "id": bid, "name": name}
+
+
+def plist_to_json(raw: list) -> dict:
+    """Convert raw SpringBoard list to frontend-friendly JSON."""
+    # Dock: raw[0] is [[app, app, app, app]] — return bare bundle ID strings
+    dock = []
+    if raw and isinstance(raw[0], list):
+        for row in raw[0]:
+            if isinstance(row, list):
+                for item in row:
+                    if isinstance(item, dict):
+                        bid = item.get("bundleIdentifier") or item.get("displayIdentifier", "")
+                        if bid:
+                            dock.append(bid)
+
+    # Pages: raw[1:] — each element is one page (list of rows)
     pages = []
-    for raw_page in raw.get("iconLists", []):
+    for page_rows in raw[1:]:
         page = []
-        for item in raw_page:
-            parsed = _parse_item(item)
-            if parsed:
-                page.append(parsed)
+        for row in page_rows:
+            if isinstance(row, list):
+                for item in row:
+                    if item is False or item is None:
+                        page.append({"type": "empty"})
+                    else:
+                        parsed = _parse_app(item)
+                        page.append(parsed if parsed else {"type": "empty"})
         pages.append(page)
+
     return {"dock": dock, "pages": pages}
 
 
-def json_to_plist(data: dict) -> dict:
-    """Convert frontend JSON back to SpringBoard plist dict."""
-    button_bar = list(data.get("dock", []))
-    icon_lists = []
+def json_to_plist(data: dict) -> list:
+    """Convert frontend JSON back to SpringBoard format."""
+    # Dock: pack into a single row of bundle IDs (dock items are bare strings)
+    dock_row = [item for item in data.get("dock", []) if isinstance(item, str)]
+    result = [[dock_row]]
 
-    for page in data.get("pages", []):
-        raw_page = []
-        for item in page:
-            if item["type"] == "app":
-                raw_page.append(item["id"])
-            elif item["type"] == "folder":
-                folder = {
-                    "displayName": item.get("name", ""),
-                    "listType": "folder",
-                    "iconLists": [list(p) for p in item.get("pages", [])],
-                }
-                raw_page.append(folder)
-        icon_lists.append(raw_page)
+    # Pages: re-chunk flat page list into rows of ROW_WIDTH, False for empty
+    for page_items in data.get("pages", []):
+        row = []
+        rows = []
+        for item in page_items:
+            row.append(item["id"] if item.get("type") == "app" else False)
+            if len(row) == ROW_WIDTH:
+                rows.append(row)
+                row = []
+        if row:
+            while len(row) < ROW_WIDTH:
+                row.append(False)
+            rows.append(row)
+        result.append(rows)
 
-    return {"buttonBar": button_bar, "iconLists": icon_lists}
+    return result
