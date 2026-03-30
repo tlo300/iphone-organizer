@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iPhone Organizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header id="header">
+  <div id="status-dot"></div>
+  <h1>iPhone Organizer</h1>
+  <span id="device-name">Not connected</span>
+  <button id="btn-load">Load from iPhone</button>
+  <button id="btn-save">Save to iPhone</button>
+</header>
+
+<!-- ── Main workspace ── -->
+<div id="workspace">
+
+  <!-- Sidebar: all installed apps -->
+  <aside id="sidebar">
+    <h2>All Apps</h2>
+    <div id="sidebar-apps"></div>
+  </aside>
+
+  <!-- Phone frame -->
+  <main id="phone-area">
+    <div class="phone-frame">
+
+      <!-- Page tabs -->
+      <div id="page-tabs"></div>
+
+      <!-- Icon grid for current page -->
+      <div class="icon-grid" id="icon-grid"></div>
+
+      <!-- Dock -->
+      <div class="dock-area">
+        <div class="dock-label">Dock</div>
+        <div id="dock-grid"></div>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- ── Overlay for errors / instructions ── -->
+<div id="message-overlay" class="hidden">
+  <div class="message-box">
+    <div id="overlay-message"></div>
+    <button id="overlay-btn">OK</button>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast"></div>
+
+<!-- SortableJS (drag-drop) -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

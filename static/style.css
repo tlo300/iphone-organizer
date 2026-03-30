@@ -1,0 +1,280 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #1a1a2e;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+#header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#header h1 { font-size: 18px; font-weight: 600; }
+#device-name { font-size: 13px; color: #aaa; margin-left: auto; }
+#status-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #555;
+  flex-shrink: 0;
+}
+#status-dot.connected  { background: #34c759; }
+#status-dot.error      { background: #ff3b30; }
+#status-dot.loading    { background: #ff9500; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+#btn-load, #btn-save {
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+#btn-load { background: #0a84ff; color: #fff; }
+#btn-save { background: #34c759; color: #fff; }
+#btn-load:disabled, #btn-save:disabled { opacity: .4; cursor: default; }
+
+/* ── Main layout ── */
+#workspace {
+  display: flex;
+  gap: 0;
+  height: calc(100vh - 57px);
+}
+
+/* ── Sidebar: installed apps ── */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  overflow-y: auto;
+  padding: 12px 8px;
+}
+#sidebar h2 { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; padding: 4px 8px 10px; }
+.sidebar-app {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+}
+.sidebar-app:hover { background: rgba(255,255,255,0.07); }
+.sidebar-app .app-icon-sm {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  background: #333;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: #888;
+  overflow: hidden;
+}
+.sidebar-app .app-icon-sm img { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-app .app-label { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Phone frame ── */
+#phone-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.phone-frame {
+  background: linear-gradient(160deg, #2c2c3e, #1a1a2e);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 40px;
+  width: 320px;
+  min-height: 600px;
+  padding: 40px 16px 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Page tabs ── */
+#page-tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.page-tab {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-tab.active { background: #0a84ff; border-color: #0a84ff; }
+#btn-add-page {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed rgba(255,255,255,0.25);
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ── Icon grid ── */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 8px;
+  min-height: 360px;
+  padding: 4px;
+}
+
+.app-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: grab;
+  user-select: none;
+  border-radius: 12px;
+  padding: 4px;
+  transition: transform .15s, opacity .15s;
+}
+.app-cell:hover { transform: scale(1.05); }
+.app-cell.sortable-ghost { opacity: .3; }
+.app-cell.sortable-drag  { transform: scale(1.1); opacity: .9; }
+
+.app-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: #333;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #888;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.app-icon img { width: 100%; height: 100%; object-fit: cover; }
+
+.app-name {
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ddd;
+}
+
+/* Folder cell */
+.folder-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px;
+  padding: 4px;
+}
+.folder-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 6px;
+}
+.folder-mini-icon {
+  border-radius: 3px;
+  background: #555;
+}
+.folder-name { font-size: 10px; color: #ddd; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Dock ── */
+.dock-area {
+  margin-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 14px;
+}
+.dock-label { font-size: 10px; color: #666; text-align: center; margin-bottom: 8px; }
+#dock-grid {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  min-height: 70px;
+  padding: 4px;
+}
+#dock-grid .app-cell { flex-shrink: 0; }
+
+/* ── Error / loading states ── */
+#message-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#message-overlay.hidden { display: none; }
+.message-box {
+  background: #2c2c3e;
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+}
+.message-box h2 { margin-bottom: 12px; font-size: 17px; }
+.message-box pre {
+  background: rgba(0,0,0,.4);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+  margin: 12px 0;
+  color: #aaa;
+}
+.message-box button {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #0a84ff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #34c759;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+  z-index: 200;
+}
+#toast.show { opacity: 1; }
+#toast.error { background: #ff3b30; }
